@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2>Create Project</h2>
+
+<form method="post" action="{{ url_for('projects.create_project') }}">
+    <input name="name" placeholder="Project Name" required><br>
+    <input name="location" placeholder="Location"><br>
+    <input name="client" placeholder="Client"><br>
+    <input name="manager" placeholder="Project Manager"><br>
+
+    <select name="status">
+        <option value="On Track">On Track</option>
+        <option value="At Risk">At Risk</option>
+        <option value="Delayed">Delayed</option>
+    </select><br>
+
+    <button type="submit">Save</button>
+</form>
+
+{% endblock %}

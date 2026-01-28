@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2>{{ project.name }}</h2>
+
+<p><strong>Location:</strong> {{ project.location }}</p>
+<p><strong>Client:</strong> {{ project.client }}</p>
+<p><strong>Manager:</strong> {{ project.manager }}</p>
+<p><strong>Status:</strong> {{ project.status }}</p>
+
+<a href="{{ url_for('projects.edit_project', id=project.id) }}">Edit</a>
+
+<form method="post" action="{{ url_for('projects.delete_project', id=project.id) }}">
+    <button type="submit">Delete</button>
+</form>
+
+{% endblock %}

@@ -1,1 +1,96 @@
 body { font-family: Arial; background:#f4f4f4; text-align:center; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        header {
+            margin-bottom: 25px;
+        }
+
+        header h1 {
+            font-size: 26px;
+            font-weight: 600;
+        }
+
+        header p {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th,
+        table td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        table th {
+            background-color: #f9fafb;
+            font-weight: 600;
+        }
+
+        .status {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status.on-track {
+            background-color: #e6f4ea;
+            color: #137333;
+        }
+
+        .status.at-risk {
+            background-color: #fff4e5;
+            color: #b26a00;
+        }
+
+        .status.delayed {
+            background-color: #fdecea;
+            color: #b00020;
+        }
+
+        footer {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            margin-top: 40px;
+        }

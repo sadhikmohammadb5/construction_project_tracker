@@ -1,12 +1,55 @@
+{% extends "layout.html" %}
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Construction Project Tracker</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
-    <h1>Welcome to Construction Project Tracker</h1>
-    <p>Project Dashboard Coming Soon</p>
-</body>
-</html>
+{% block content %}
+
+<div style="max-width:900px; margin:60px auto; text-align:center;">
+
+    <h1 style="margin-bottom:10px;"></h1>
+    <p style="color:#666; margin-bottom:40px;">
+        Select your role to continue
+    </p>
+
+    <div style="
+        display:grid;
+        grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+        gap:30px;
+    ">
+
+        <!-- Admin -->
+        <div class="card">
+            <h2>Admin</h2>
+            <p style="color:#777;">
+                Manage projects and assign project managers
+            </p>
+            <a href="{{ url_for('admin_dashboard') }}">
+                <button style="margin-top:15px;">Go to Admin</button>
+            </a>
+        </div>
+
+        <!-- Project Manager -->
+        <div class="card">
+            <h2>Project Manager</h2>
+            <p style="color:#777;">
+                View assigned projects and manage tasks
+            </p>
+            <a href="{{ url_for('project_manager_dashboard') }}">
+                <button style="margin-top:15px;">Go to Manager</button>
+            </a>
+        </div>
+
+        <!-- Worker -->
+        <div class="card">
+            <h2>Worker</h2>
+            <p style="color:#777;">
+                View tasks and update daily progress
+            </p>
+            <a href="{{ url_for('worker_dashboard') }}">
+                <button style="margin-top:15px;">Go to Worker</button>
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2>Admin Dashboard</h2>
+<p style="color:#666;">Manage projects and assign project managers</p>
+
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>Project Name</th>
+                <th>Project Manager</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for project in projects %}
+            <tr>
+                <td>{{ project.name }}</td>
+                <td>
+                    {{ project.manager if project.manager else "Unassigned" }}
+                </td>
+                <td>
+                    <span class="status
+                        {% if project.status == 'On Track' %}on-track
+                        {% elif project.status == 'At Risk' %}at-risk
+                        {% else %}delayed{% endif %}">
+                        {{ project.status }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('projects.edit_project', id=project.id) }}">Assign / Edit</a>
+                    |
+                    <a href="{{ url_for('projects.project_detail', id=project.id) }}">View</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4" style="text-align:center;">No projects found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

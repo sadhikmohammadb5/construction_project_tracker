@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2>Projects</h2>
+
+<a href="{{ url_for('projects.create_project') }}">➕ New Project</a>
+
+
+<table>
+    <tr>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+    {% for project in projects %}
+    <tr>
+        <td>{{ project.name }}</td>
+        <td>{{ project.status }}</td>
+        <td>
+            <a href="{{ url_for('projects.project_detail', id=project.id) }}">View</a>
+            <a href="{{ url_for('projects.edit_project', id=project.id) }}">Edit</a>
+
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2>Edit Project</h2>
+
+<form method="post" action="{{ url_for('projects.edit_project', id=project.id) }}">
+    <input name="name" value="{{ project.name }}" required><br>
+    <input name="location" value="{{ project.location }}"><br>
+    <input name="client" value="{{ project.client }}"><br>
+    <input name="manager" value="{{ project.manager }}"><br>
+
+    <select name="status">
+        <option value="On Track" {% if project.status == "On Track" %}selected{% endif %}>
+            On Track
+        </option>
+        <option value="At Risk" {% if project.status == "At Risk" %}selected{% endif %}>
+            At Risk
+        </option>
+        <option value="Delayed" {% if project.status == "Delayed" %}selected{% endif %}>
+            Delayed
+        </option>
+    </select><br>
+
+    <button type="submit">Update</button>
+</form>
+
+{% endblock %}
