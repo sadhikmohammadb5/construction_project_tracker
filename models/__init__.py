@@ -7,4 +7,7 @@ from .task import Task
 from .budget import Budget
 from .daily_log import DailyLog
 from .issue import Issue
+from .worker import Worker
+from .attendance import Attendance
+from .work_log import WorkLog
 

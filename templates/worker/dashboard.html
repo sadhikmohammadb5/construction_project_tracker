@@ -2,6 +2,27 @@
 {% block content %}
 
 <h2>Worker Dashboard</h2>
-<p>Your assigned tasks will appear here.</p>
+
+<!-- Attendance -->
+<div class="card">
+    <h3>Today's Attendance</h3>
+    <form method="post" action="{{ url_for('mark_attendance') }}">
+        <select name="status" required>
+            <option value="Present">Present</option>
+            <option value="Absent">Absent</option>
+        </select>
+        <button type="submit">Submit Attendance</button>
+    </form>
+</div>
+
+<!-- Work Log -->
+<div class="card">
+    <h3>Daily Work Log</h3>
+    <form method="post" action="{{ url_for('submit_work_log') }}">
+        <textarea name="description" placeholder="Describe today's work" required></textarea>
+        <input type="number" name="hours" placeholder="Hours Worked" required>
+        <button type="submit">Submit Work Log</button>
+    </form>
+</div>
 
 {% endblock %}
