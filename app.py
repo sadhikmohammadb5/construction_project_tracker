@@ -7,6 +7,8 @@ from routes.project_routes import project_bp
 from flask import request, session
 from models import db, Worker, Attendance, WorkLog
 
+from models import Attendance, WorkLog, Worker, WorkAssignment
+
 
 
 app = Flask(__name__)
@@ -32,11 +34,6 @@ def index():
 def admin_dashboard():
     projects = Project.query.order_by(Project.id.desc()).all()
     return render_template("admin/dashboard.html", projects=projects)
-
-
-@app.route("/project-manager")
-def project_manager_dashboard():
-    return render_template("project_manager/dashboard.html")
 
 
 @app.route("/worker/dashboard", methods=["GET", "POST"])
@@ -104,6 +101,64 @@ def submit_work_log():
     db.session.add(log)
     db.session.commit()
     return redirect(url_for("worker_dashboard"))
+
+# ----------------------
+# Project Manager Dashboard Route
+# ----------------------
+
+@app.route("/project-manager/dashboard")
+def project_manager_dashboard():
+    attendances = Attendance.query.order_by(Attendance.date.desc()).all()
+    work_logs = WorkLog.query.order_by(WorkLog.created_at.desc()).all()
+    workers = Worker.query.all()
+
+    return render_template(
+        "project_manager/dashboard.html",
+        attendances=attendances,
+        work_logs=work_logs,
+        workers=workers
+    )
+    
+# ----------------------
+# Approve Work Log Route
+# ----------------------
+
+@app.route("/project-manager/work-log/<int:id>/approve", methods=["POST"])
+def approve_work_log(id):
+    log = WorkLog.query.get_or_404(id)
+    log.status = "Approved"
+    log.manager_comment = request.form.get("comment")
+    db.session.commit()
+    return redirect(url_for("project_manager_dashboard"))
+
+# ----------------------
+# Reject Work Log Route
+# ----------------------
+
+@app.route("/project-manager/work-log/<int:id>/reject", methods=["POST"])
+def reject_work_log(id):
+    log = WorkLog.query.get_or_404(id)
+    log.status = "Rejected"
+    log.manager_comment = request.form.get("comment")
+    db.session.commit()
+    return redirect(url_for("project_manager_dashboard"))
+
+# ----------------------
+# Assign Work Route
+# ----------------------
+
+@app.route("/project-manager/assign-work", methods=["POST"])
+def assign_work():
+    assignment = WorkAssignment(
+        worker_id=request.form["worker_id"],
+        project_id=request.form.get("project_id"),
+        task_title=request.form["task_title"],
+        instructions=request.form["instructions"]
+    )
+    db.session.add(assignment)
+    db.session.commit()
+    return redirect(url_for("project_manager_dashboard"))
+
 
 # ----------------------
 # Run App

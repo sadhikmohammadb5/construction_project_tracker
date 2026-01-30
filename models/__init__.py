@@ -10,4 +10,5 @@ from .issue import Issue
 from .worker import Worker
 from .attendance import Attendance
 from .work_log import WorkLog
+from .work_assignment import WorkAssignment
 

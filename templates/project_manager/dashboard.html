@@ -1,8 +1,79 @@
 {% extends "layout.html" %}
-
 {% block content %}
+
 <h2>Project Manager Dashboard</h2>
 
-<p>Here you will see projects assigned to you.</p>
+<!-- Attendance -->
+<div class="card">
+    <h3>Worker Attendance</h3>
+    <table>
+        <tr>
+            <th>Worker ID</th>
+            <th>Date</th>
+            <th>Status</th>
+        </tr>
+        {% for a in attendances %}
+        <tr>
+            <td>{{ a.worker_id }}</td>
+            <td>{{ a.date }}</td>
+            <td>{{ a.status }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<!-- Work Logs -->
+<div class="card">
+    <h3>Daily Work Logs</h3>
+    <table>
+        <tr>
+            <th>Worker</th>
+            <th>Description</th>
+            <th>Hours</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+
+        {% for log in work_logs %}
+        <tr>
+            <td>{{ log.worker_id }}</td>
+            <td>{{ log.description }}</td>
+            <td>{{ log.hours_worked }}</td>
+            <td>{{ log.status }}</td>
+            <td>
+                {% if log.status == "Pending" %}
+                <form method="post" action="{{ url_for('approve_work_log', id=log.id) }}">
+                    <input name="comment" placeholder="Comment (optional)">
+                    <button>Approve</button>
+                </form>
+
+                <form method="post" action="{{ url_for('reject_work_log', id=log.id) }}">
+                    <input name="comment" placeholder="Reason">
+                    <button>Reject</button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<!-- Assign Work -->
+<div class="card">
+    <h3>Assign Work to Worker</h3>
+
+    <form method="post" action="{{ url_for('assign_work') }}">
+        <select name="worker_id" required>
+            {% for w in workers %}
+            <option value="{{ w.id }}">{{ w.name }}</option>
+            {% endfor %}
+        </select><br><br>
+
+        <input name="task_title" placeholder="Task Title" required><br><br>
+        <textarea name="instructions" placeholder="Work Instructions" required></textarea><br><br>
+
+        <button type="submit">Assign Work</button>
+    </form>
+</div>
 
 {% endblock %}
