@@ -21,10 +21,11 @@
         <tbody>
             {% for task in assignments %}
             <tr>
-                <td>{{ task.project.name }}</td>
-                <td>{{ task.title }}</td>
-                <td>{{ task.description }}</td>
-                <td>{{ task.due_date }}</td>
+                <td>{{ task.project.name if task.project else "—" }}</td>
+                <td>{{ task.task_title }}</td>
+                <td>{{ task.instructions }}</td>
+
+                <td>{{ task.due_date or "—" }}</td>
                 <td>
                     <span class="status {{ task.status|lower }}">
                         {{ task.status }}

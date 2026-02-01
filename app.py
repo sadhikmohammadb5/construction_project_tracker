@@ -36,12 +36,27 @@ def admin_dashboard():
     return render_template("admin/dashboard.html", projects=projects)
 
 
-@app.route("/worker/dashboard", methods=["GET", "POST"])
+@app.route("/worker/dashboard")
 def worker_dashboard():
     if "worker_id" not in session:
         return redirect(url_for("worker_login"))
 
-    return render_template("worker/dashboard.html")
+    worker_id = session["worker_id"]
+
+    assignments = WorkAssignment.query.filter_by(
+        worker_id=worker_id
+    ).order_by(WorkAssignment.created_at.desc()).all()
+
+    attendance_marked = Attendance.query.filter_by(
+        worker_id=worker_id,
+        date=date.today()
+    ).first()
+
+    return render_template(
+        "worker/dashboard.html",
+        assignments=assignments,
+        attendance_marked=attendance_marked
+    )
 
 # ----------------------
 # Worker Authentication Routes
@@ -153,12 +168,14 @@ def assign_work():
         worker_id=request.form["worker_id"],
         project_id=request.form.get("project_id"),
         task_title=request.form["task_title"],
-        instructions=request.form["instructions"]
+        instructions=request.form["instructions"],
+        due_date=request.form.get("due_date")
     )
+
     db.session.add(assignment)
     db.session.commit()
-    return redirect(url_for("project_manager_dashboard"))
 
+    return redirect(url_for("project_manager_dashboard"))
 
 # ----------------------
 # Run App
