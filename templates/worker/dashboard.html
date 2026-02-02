@@ -24,7 +24,6 @@
                 <td>{{ task.project.name if task.project else "—" }}</td>
                 <td>{{ task.task_title }}</td>
                 <td>{{ task.instructions }}</td>
-
                 <td>{{ task.due_date or "—" }}</td>
                 <td>
                     <span class="status {{ task.status|lower }}">
@@ -78,4 +77,41 @@
     </form>
 </div>
 
-{% endblock %}
+
+
+<!-- ================= Submitted Work Logs ================= -->
+<div class="card">
+    <h3>My Submitted Work Logs</h3>
+
+    {% if logs %}
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Hours</th>
+                <th>Status</th>
+                <th>Manager Comment</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.created_at.strftime('%Y-%m-%d') }}</td>
+                <td>{{ log.description }}</td>
+                <td>{{ log.hours_worked }}</td>
+                <td>
+                    <span class="status {{ log.status|lower }}">
+                        {{ log.status }}
+                    </span>
+                </td>
+                <td>{{ log.manager_comment or "—" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p style="color:#777;">No work logs submitted yet.</p>
+    {% endif %}
+</div>
+{% endblock %}  

@@ -3,77 +3,109 @@
 
 <h2>Project Manager Dashboard</h2>
 
-<!-- Attendance -->
+<!-- ================= Create Project Manager ================= -->
 <div class="card">
-    <h3>Worker Attendance</h3>
-    <table>
-        <tr>
-            <th>Worker ID</th>
-            <th>Date</th>
-            <th>Status</th>
-        </tr>
-        {% for a in attendances %}
-        <tr>
-            <td>{{ a.worker_id }}</td>
-            <td>{{ a.date }}</td>
-            <td>{{ a.status }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+  <h3>Create Project Manager</h3>
+  <form method="post" action="{{ url_for('pm_create_other_pm') }}">
+    <input name="name" placeholder="Name" required />
+    <input name="email" type="email" placeholder="Email" required />
+    <input name="password" type="password" placeholder="Password" required />
+    <button type="submit">Create</button>
+  </form>
 </div>
 
-<!-- Work Logs -->
+<!-- ================= Worker Attendance ================= -->
 <div class="card">
-    <h3>Daily Work Logs</h3>
-    <table>
-        <tr>
-            <th>Worker</th>
-            <th>Description</th>
-            <th>Hours</th>
-            <th>Status</th>
-            <th>Action</th>
-        </tr>
-
-        {% for log in work_logs %}
-        <tr>
-            <td>{{ log.worker_id }}</td>
-            <td>{{ log.description }}</td>
-            <td>{{ log.hours_worked }}</td>
-            <td>{{ log.status }}</td>
-            <td>
-                {% if log.status == "Pending" %}
-                <form method="post" action="{{ url_for('approve_work_log', id=log.id) }}">
-                    <input name="comment" placeholder="Comment (optional)">
-                    <button>Approve</button>
-                </form>
-
-                <form method="post" action="{{ url_for('reject_work_log', id=log.id) }}">
-                    <input name="comment" placeholder="Reason">
-                    <button>Reject</button>
-                </form>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+  <h3>Worker Attendance</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Worker</th>
+        <th>Date</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in attendances %}
+      <tr>
+        <td>{{ a.worker.name }}</td>
+        <td>{{ a.date }}</td>
+        <td>{{ a.status }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 
-<!-- Assign Work -->
+<!-- ================= Daily Work Logs ================= -->
 <div class="card">
-    <h3>Assign Work to Worker</h3>
+  <h3>Daily Work Logs</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Worker</th>
+        <th>Description</th>
+        <th>Hours</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in work_logs %}
+      <tr>
+        <td>{{ log.worker.name }}</td>
+        <td>{{ log.description }}</td>
+        <td>{{ log.hours_worked }}</td>
+        <td>{{ log.status }}</td>
+        <td>
+          {% if log.status == "Pending" %}
+          <form method="post" action="{{ url_for('approve_work_log', id=log.id) }}">
+            <input name="comment" placeholder="Comment (optional)" />
+            <button type="submit">Approve</button>
+          </form>
 
-    <form method="post" action="{{ url_for('assign_work') }}">
-        <select name="worker_id" required>
-            {% for w in workers %}
-            <option value="{{ w.id }}">{{ w.name }}</option>
-            {% endfor %}
-        </select><br><br>
+          <form method="post" action="{{ url_for('reject_work_log', id=log.id) }}">
+            <input name="comment" placeholder="Reason" />
+            <button type="submit">Reject</button>
+          </form>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
-        <input name="task_title" placeholder="Task Title" required><br><br>
-        <textarea name="instructions" placeholder="Work Instructions" required></textarea><br><br>
+<!-- ================= Assign Work ================= -->
+<div class="card">
+  <h3>Assign Work to Worker</h3>
 
-        <button type="submit">Assign Work</button>
-    </form>
+  <form method="post" action="{{ url_for('assign_work') }}">
+    <select name="worker_id" required>
+      {% for w in workers %}
+      <option value="{{ w.id }}">{{ w.name }}</option>
+      {% endfor %}
+    </select>
+    <br /><br />
+
+    <input name="task_title" placeholder="Task Title" required />
+    <br /><br />
+
+    <textarea
+      name="instructions"
+      placeholder="Work Instructions"
+      required
+    ></textarea>
+    <br /><br />
+
+    <label>Due Date</label><br />
+    <input type="date" name="due_date" required />
+    <br /><br />
+
+    <button type="submit">Assign Work</button>
+  </form>
 </div>
 
 {% endblock %}

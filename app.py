@@ -1,13 +1,18 @@
-from flask import Flask, redirect, render_template, url_for
+from flask import Flask, render_template, redirect, url_for, request, session, flash
+from sqlalchemy.exc import IntegrityError
+
 from datetime import date
 
-from models import db, Project, Task, Issue
+from models.project_manager import ProjectManager
 from routes.project_routes import project_bp
 
 from flask import request, session
 from models import db, Worker, Attendance, WorkLog
 
 from models import Attendance, WorkLog, Worker, WorkAssignment
+
+from datetime import datetime
+from functools import wraps
 
 
 
@@ -52,11 +57,17 @@ def worker_dashboard():
         date=date.today()
     ).first()
 
+    logs = WorkLog.query.filter_by(
+        worker_id=worker_id
+    ).order_by(WorkLog.created_at.desc()).all()
+
     return render_template(
-        "worker/dashboard.html",
-        assignments=assignments,
-        attendance_marked=attendance_marked
-    )
+    "worker/dashboard.html",
+    assignments=assignments,
+    attendance_marked=attendance_marked,
+    logs=logs
+)
+
 
 # ----------------------
 # Worker Authentication Routes
@@ -67,14 +78,20 @@ def worker_register():
         worker = Worker(
             name=request.form["name"],
             email=request.form["email"],
-            password=request.form["password"]  # (plain for now)
+            password=request.form["password"]
         )
-        db.session.add(worker)
-        db.session.commit()
-        return redirect(url_for("worker_login"))
+
+        try:
+            db.session.add(worker)
+            db.session.commit()
+            return redirect(url_for("worker_login"))
+
+        except IntegrityError:
+            db.session.rollback()
+            flash("Email already exists. Please login.", "error")
+            return redirect(url_for("worker_register"))
 
     return render_template("worker/register.html")
-
 # ----------------------
 # Worker Login Route
 
@@ -130,9 +147,10 @@ def project_manager_dashboard():
     return render_template(
         "project_manager/dashboard.html",
         attendances=attendances,
-        work_logs=work_logs,
-        workers=workers
-    )
+            work_logs=work_logs,
+            workers=workers
+        )
+
     
 # ----------------------
 # Approve Work Log Route
@@ -162,20 +180,96 @@ def reject_work_log(id):
 # Assign Work Route
 # ----------------------
 
+
+
 @app.route("/project-manager/assign-work", methods=["POST"])
 def assign_work():
+    due_date_str = request.form.get("due_date")
+
+    due_date = (
+        datetime.strptime(due_date_str, "%Y-%m-%d").date()
+        if due_date_str else None
+    )
+
     assignment = WorkAssignment(
         worker_id=request.form["worker_id"],
         project_id=request.form.get("project_id"),
         task_title=request.form["task_title"],
         instructions=request.form["instructions"],
-        due_date=request.form.get("due_date")
+        due_date=due_date
     )
 
     db.session.add(assignment)
     db.session.commit()
 
     return redirect(url_for("project_manager_dashboard"))
+
+# ----------------------
+# Project Manager Login Route
+# ----------------------
+
+@app.route("/project-manager/login", methods=["GET", "POST"])
+def pm_login():
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+
+        pm = ProjectManager.query.filter_by(email=email).first()
+
+        if pm and pm.check_password(password):
+            session["pm_id"] = pm.id
+            session["pm_name"] = pm.name
+            return redirect(url_for("project_manager_dashboard"))
+
+        flash("Invalid email or password", "error")
+
+    return render_template("project_manager/login.html")
+
+
+# ----------------------    
+# Project Manager Logout Route
+# ----------------------    
+
+@app.route("/project-manager/logout")
+def pm_logout():
+    session.clear()
+    return redirect(url_for("pm_login"))
+
+# ----------------------
+# Create Project Manager Route
+# ----------------------
+@app.route("/admin/create-project-manager", methods=["GET", "POST"])
+def create_project_manager():
+    if request.method == "POST":
+        pm = ProjectManager(
+            name=request.form["name"],
+            email=request.form["email"]
+        )
+        pm.set_password(request.form["password"])
+
+        db.session.add(pm)
+        db.session.commit()
+
+        flash("Project Manager created successfully", "success")
+        return redirect(url_for("pm_login"))
+
+    return render_template("admin/create_project_manager.html")
+
+# ----------------------
+@app.route("/project-manager/create", methods=["POST"])
+def pm_create_other_pm():
+    pm = ProjectManager(
+        name=request.form["name"],
+        email=request.form["email"]
+    )
+    pm.set_password(request.form["password"])
+
+    db.session.add(pm)
+    db.session.commit()
+
+    flash("New Project Manager created", "success")
+    return redirect(url_for("project_manager_dashboard"))
+
 
 # ----------------------
 # Run App
