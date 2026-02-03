@@ -1,19 +1,18 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from sqlalchemy.exc import IntegrityError
+from datetime import date, datetime
 
-from datetime import date
+from models import (
+    db,
+    Worker,
+    ProjectManager,
+    Project,
+    Attendance,
+    WorkAssignment,
+    WorkLog
+)
 
-from models.project_manager import ProjectManager
 from routes.project_routes import project_bp
-
-from flask import request, session
-from models import db, Worker, Attendance, WorkLog
-
-from models import Attendance, WorkLog, Worker, WorkAssignment
-
-from datetime import datetime
-from functools import wraps
-
 
 
 app = Flask(__name__)
@@ -29,18 +28,25 @@ app.register_blueprint(project_bp)
 
 
 # ----------------------
-# Dashboard Route
+# Public Routes
 # ----------------------
 @app.route("/")
 def index():
     return render_template("index.html")
 
+
+# ----------------------
+# Admin Dashboard
+# ----------------------
 @app.route("/admin")
 def admin_dashboard():
     projects = Project.query.order_by(Project.id.desc()).all()
     return render_template("admin/dashboard.html", projects=projects)
 
 
+# ----------------------
+# Worker Dashboard
+# ----------------------
 @app.route("/worker/dashboard")
 def worker_dashboard():
     if "worker_id" not in session:
@@ -62,15 +68,15 @@ def worker_dashboard():
     ).order_by(WorkLog.created_at.desc()).all()
 
     return render_template(
-    "worker/dashboard.html",
-    assignments=assignments,
-    attendance_marked=attendance_marked,
-    logs=logs
-)
+        "worker/dashboard.html",
+        assignments=assignments,
+        attendance_marked=attendance_marked,
+        logs=logs
+    )
 
 
 # ----------------------
-# Worker Authentication Routes
+# Worker Authentication
 # ----------------------
 @app.route("/worker/register", methods=["GET", "POST"])
 def worker_register():
@@ -85,15 +91,12 @@ def worker_register():
             db.session.add(worker)
             db.session.commit()
             return redirect(url_for("worker_login"))
-
         except IntegrityError:
             db.session.rollback()
             flash("Email already exists. Please login.", "error")
             return redirect(url_for("worker_register"))
 
     return render_template("worker/register.html")
-# ----------------------
-# Worker Login Route
 
 
 @app.route("/worker/login", methods=["GET", "POST"])
@@ -104,11 +107,14 @@ def worker_login():
             session["worker_id"] = worker.id
             return redirect(url_for("worker_dashboard"))
 
+        flash("Invalid credentials", "error")
+
     return render_template("worker/login.html")
 
-# ----------------------
-# Worker Attendance and Work Log Routes
 
+# ----------------------
+# Worker Attendance & Logs
+# ----------------------
 @app.route("/worker/attendance", methods=["POST"])
 def mark_attendance():
     attendance = Attendance(
@@ -119,9 +125,6 @@ def mark_attendance():
     db.session.commit()
     return redirect(url_for("worker_dashboard"))
 
-
-# ----------------------
-# Worker Work Log Route
 
 @app.route("/worker/work-log", methods=["POST"])
 def submit_work_log():
@@ -134,12 +137,15 @@ def submit_work_log():
     db.session.commit()
     return redirect(url_for("worker_dashboard"))
 
-# ----------------------
-# Project Manager Dashboard Route
-# ----------------------
 
+# ----------------------
+# Project Manager Dashboard
+# ----------------------
 @app.route("/project-manager/dashboard")
 def project_manager_dashboard():
+    if "pm_id" not in session:
+        return redirect(url_for("pm_login"))
+
     attendances = Attendance.query.order_by(Attendance.date.desc()).all()
     work_logs = WorkLog.query.order_by(WorkLog.created_at.desc()).all()
     workers = Worker.query.all()
@@ -147,15 +153,14 @@ def project_manager_dashboard():
     return render_template(
         "project_manager/dashboard.html",
         attendances=attendances,
-            work_logs=work_logs,
-            workers=workers
-        )
+        work_logs=work_logs,
+        workers=workers
+    )
 
-    
-# ----------------------
-# Approve Work Log Route
-# ----------------------
 
+# ----------------------
+# Approve / Reject Logs
+# ----------------------
 @app.route("/project-manager/work-log/<int:id>/approve", methods=["POST"])
 def approve_work_log(id):
     log = WorkLog.query.get_or_404(id)
@@ -164,9 +169,6 @@ def approve_work_log(id):
     db.session.commit()
     return redirect(url_for("project_manager_dashboard"))
 
-# ----------------------
-# Reject Work Log Route
-# ----------------------
 
 @app.route("/project-manager/work-log/<int:id>/reject", methods=["POST"])
 def reject_work_log(id):
@@ -176,20 +178,14 @@ def reject_work_log(id):
     db.session.commit()
     return redirect(url_for("project_manager_dashboard"))
 
+
 # ----------------------
-# Assign Work Route
+# Assign Work
 # ----------------------
-
-
-
 @app.route("/project-manager/assign-work", methods=["POST"])
 def assign_work():
     due_date_str = request.form.get("due_date")
-
-    due_date = (
-        datetime.strptime(due_date_str, "%Y-%m-%d").date()
-        if due_date_str else None
-    )
+    due_date = datetime.strptime(due_date_str, "%Y-%m-%d").date() if due_date_str else None
 
     assignment = WorkAssignment(
         worker_id=request.form["worker_id"],
@@ -201,22 +197,18 @@ def assign_work():
 
     db.session.add(assignment)
     db.session.commit()
-
     return redirect(url_for("project_manager_dashboard"))
 
-# ----------------------
-# Project Manager Login Route
-# ----------------------
 
+# ----------------------
+# Project Manager Auth
+# ----------------------
 @app.route("/project-manager/login", methods=["GET", "POST"])
 def pm_login():
     if request.method == "POST":
-        email = request.form["email"]
-        password = request.form["password"]
+        pm = ProjectManager.query.filter_by(email=request.form["email"]).first()
 
-        pm = ProjectManager.query.filter_by(email=email).first()
-
-        if pm and pm.check_password(password):
+        if pm and pm.check_password(request.form["password"]):
             session["pm_id"] = pm.id
             session["pm_name"] = pm.name
             return redirect(url_for("project_manager_dashboard"))
@@ -226,17 +218,14 @@ def pm_login():
     return render_template("project_manager/login.html")
 
 
-# ----------------------    
-# Project Manager Logout Route
-# ----------------------    
-
 @app.route("/project-manager/logout")
 def pm_logout():
     session.clear()
     return redirect(url_for("pm_login"))
 
+
 # ----------------------
-# Create Project Manager Route
+# Admin: Create First PM
 # ----------------------
 @app.route("/admin/create-project-manager", methods=["GET", "POST"])
 def create_project_manager():
@@ -255,6 +244,9 @@ def create_project_manager():
 
     return render_template("admin/create_project_manager.html")
 
+
+# ----------------------
+# PM creates other PMs
 # ----------------------
 @app.route("/project-manager/create", methods=["POST"])
 def pm_create_other_pm():
