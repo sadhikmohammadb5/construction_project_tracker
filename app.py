@@ -158,6 +158,8 @@ def project_manager_dashboard():
     )
 
 
+
+
 # ----------------------
 # Approve / Reject Logs
 # ----------------------
@@ -209,6 +211,7 @@ def pm_login():
         pm = ProjectManager.query.filter_by(email=request.form["email"]).first()
 
         if pm and pm.check_password(request.form["password"]):
+            session.clear()            
             session["pm_id"] = pm.id
             session["pm_name"] = pm.name
             return redirect(url_for("project_manager_dashboard"))
