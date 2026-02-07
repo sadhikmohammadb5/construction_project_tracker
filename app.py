@@ -160,6 +160,7 @@ def project_manager_dashboard():
 
 
 
+
 # ----------------------
 # Approve / Reject Logs
 # ----------------------
@@ -233,9 +234,16 @@ def pm_logout():
 @app.route("/admin/create-project-manager", methods=["GET", "POST"])
 def create_project_manager():
     if request.method == "POST":
+        email = request.form["email"]
+
+        existing_pm = ProjectManager.query.filter_by(email=email).first()
+        if existing_pm:
+            flash("Project Manager with this email already exists", "error")
+            return redirect(url_for("create_project_manager"))
+
         pm = ProjectManager(
             name=request.form["name"],
-            email=request.form["email"]
+            email=email
         )
         pm.set_password(request.form["password"])
 
@@ -253,17 +261,41 @@ def create_project_manager():
 # ----------------------
 @app.route("/project-manager/create", methods=["POST"])
 def pm_create_other_pm():
-    pm = ProjectManager(
-        name=request.form["name"],
-        email=request.form["email"]
-    )
-    pm.set_password(request.form["password"])
+    #  Ensure Project Manager is logged in
+    if "pm_id" not in session:
+        flash("Please login first", "error")
+        return redirect(url_for("pm_login"))
 
-    db.session.add(pm)
-    db.session.commit()
+    name = request.form.get("name")
+    email = request.form.get("email")
+    password = request.form.get("password")
 
-    flash("New Project Manager created", "success")
+    #  Basic form validation
+    if not name or not email or not password:
+        flash("All fields are required", "error")
+        return redirect(url_for("project_manager_dashboard"))
+
+    #  Prevent duplicate email BEFORE insert
+    existing_pm = ProjectManager.query.filter_by(email=email).first()
+    if existing_pm:
+        flash("Project Manager with this email already exists", "error")
+        return redirect(url_for("project_manager_dashboard"))
+
+    #  Create new Project Manager
+    pm = ProjectManager(name=name, email=email)
+    pm.set_password(password)
+
+    try:
+        db.session.add(pm)
+        db.session.commit()
+        flash("New Project Manager created successfully", "success")
+
+    except IntegrityError:
+        db.session.rollback()
+        flash("Email already exists", "error")
+
     return redirect(url_for("project_manager_dashboard"))
+
 
 
 # ----------------------
