@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2>Create Project Manager</h2>
+
+<div class="card">
+  <form method="post">
+    <input name="name" placeholder="Name" required />
+    <input name="email" type="email" placeholder="Email" required />
+    <input name="password" type="password" placeholder="Password" required />
+    <button type="submit">Create Project Manager</button>
+  </form>
+</div>
+
+{% endblock %}
