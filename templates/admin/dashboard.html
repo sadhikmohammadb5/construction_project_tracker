@@ -16,22 +16,110 @@
   </form>
 </div>
 
+
+
+<!-- ================= Create Project ================= -->
+<div class="card">
+  <h3>Create New Project</h3>
+
+  <form method="post" action="{{ url_for('create_project') }}">
+
+    <input name="name" placeholder="Project Name" required />
+
+    <input type="number" step="0.01"
+           name="budget"
+           placeholder="Project Budget"
+           required />
+
+    <input type="number"
+           name="duration"
+           placeholder="Duration (Days)"
+           required />
+
+    <select name="status">
+      <option value="On Track">On Track</option>
+      <option value="At Risk">At Risk</option>
+      <option value="Delayed">Delayed</option>
+    </select>
+
+    <select name="pm_id">
+      <option value="">Assign Later</option>
+      {% for pm in project_managers %}
+      <option value="{{ pm.id }}">{{ pm.name }}</option>
+      {% endfor %}
+    </select>
+
+    <button type="submit">Create Project</button>
+
+  </form>
+</div>
+
+
+<!-- ================= Existing Projects ================= -->
+<div class="card">
+  <h3>Existing Projects</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Budget</th>
+        <th>Duration</th>
+        <th>Manager</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      {% for project in projects %}
+      <tr>
+        <td>{{ project.name }}</td>
+        <td>${{ project.budget }}</td>
+        <td>{{ project.duration_days }} days</td>
+        <td>
+          {% if project.project_manager %}
+            {{ project.project_manager.name }}
+          {% else %}
+            Unassigned
+          {% endif %}
+        </td>
+        <td>{{ project.status }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="5" style="text-align:center;">No projects yet</td>
+      </tr>
+      {% endfor %}
+
+    </tbody>
+  </table>
+</div>
+
+
 <!-- ================= Projects ================= -->
 <div class="card">
   <table>
     <thead>
       <tr>
         <th>Project Name</th>
-        <th>Project Manager</th>
+        <th>Assigned Project Manager</th>
         <th>Status</th>
-        <th>Actions</th>
+        <th>Assign Project Manager</th>
       </tr>
     </thead>
     <tbody>
       {% for project in projects %}
       <tr>
         <td>{{ project.name }}</td>
-        <td>{{ project.manager if project.manager else "Unassigned" }}</td>
+
+        <td>
+          {% if project.project_manager %}
+            {{ project.project_manager.name }}
+          {% else %}
+            Unassigned
+          {% endif %}
+        </td>
+
         <td>
           <span class="status
             {% if project.status == 'On Track' %}on-track
@@ -40,11 +128,22 @@
             {{ project.status }}
           </span>
         </td>
+
         <td>
-          <a href="{{ url_for('projects.edit_project', id=project.id) }}">Assign / Edit</a>
-          |
-          <a href="{{ url_for('projects.project_detail', id=project.id) }}">View</a>
+          <form method="post"
+                action="{{ url_for('assign_project_to_pm', project_id=project.id) }}">
+
+            <select name="pm_id" required>
+              <option value="">Select Manager</option>
+              {% for pm in project_managers %}
+              <option value="{{ pm.id }}">{{ pm.name }}</option>
+              {% endfor %}
+            </select>
+
+            <button type="submit">Assign</button>
+          </form>
         </td>
+
       </tr>
       {% else %}
       <tr>

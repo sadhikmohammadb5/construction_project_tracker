@@ -108,4 +108,50 @@
   </form>
 </div>
 
+<!-- ================= Assigned Projects ================= -->
+<div class="card">
+  <h3>Assigned Projects</h3>
+
+  {% if assigned_projects %}
+  <table>
+    <thead>
+      <tr>
+        <th>Project Name</th>
+        <th>Budget</th>
+        <th>Duration</th>
+        <th>Status</th>
+        <th>Assignment</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      {% for project in assigned_projects %}
+      <tr>
+        <td>{{ project.name }}</td>
+        <td>${{ project.budget }}</td>
+        <td>{{ project.duration_days }} days</td>
+        <td>{{ project.status }}</td>
+        <td>{{ project.assignment_status }}</td>
+        <td>
+          {% if project.assignment_status == "Pending" %}
+          <form method="post"
+                action="{{ url_for('accept_project', project_id=project.id) }}">
+            <button type="submit">Accept</button>
+          </form>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+
+    </tbody>
+  </table>
+  {% else %}
+    <p>No projects assigned.</p>
+  {% endif %}
+</div>
+
+
 {% endblock %}

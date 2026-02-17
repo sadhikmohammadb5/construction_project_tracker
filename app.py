@@ -41,7 +41,42 @@ def index():
 @app.route("/admin")
 def admin_dashboard():
     projects = Project.query.order_by(Project.id.desc()).all()
-    return render_template("admin/dashboard.html", projects=projects)
+
+    project_managers = ProjectManager.query.order_by(ProjectManager.name.asc()).all()
+
+    return render_template(
+        "admin/dashboard.html",
+        projects=projects,
+        project_managers=project_managers
+    )
+
+
+
+# ---------------
+#assign route 
+# ---------------
+
+
+@app.route("/admin/assign-project/<int:project_id>", methods=["POST"])
+def assign_project_to_pm(project_id):
+
+    project = Project.query.get_or_404(project_id)
+
+    pm_id = request.form.get("pm_id")
+
+    if not pm_id:
+        flash("Please select a project manager", "error")
+        return redirect(url_for("admin_dashboard"))
+
+    project.project_manager_id = int(pm_id)
+
+    db.session.commit()
+
+    flash("Project assigned successfully", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+
 
 
 # ----------------------
@@ -143,8 +178,15 @@ def submit_work_log():
 # ----------------------
 @app.route("/project-manager/dashboard")
 def project_manager_dashboard():
+
     if "pm_id" not in session:
         return redirect(url_for("pm_login"))
+
+    pm_id = session["pm_id"]
+
+    assigned_projects = Project.query.filter_by(
+        project_manager_id=pm_id
+    ).all()
 
     attendances = Attendance.query.order_by(Attendance.date.desc()).all()
     work_logs = WorkLog.query.order_by(WorkLog.created_at.desc()).all()
@@ -152,10 +194,31 @@ def project_manager_dashboard():
 
     return render_template(
         "project_manager/dashboard.html",
+        assigned_projects=assigned_projects,
         attendances=attendances,
         work_logs=work_logs,
         workers=workers
     )
+    
+
+# ----------------------
+# Accept Project Assignment
+# ----------------------    
+
+@app.route("/project-manager/accept-project/<int:project_id>", methods=["POST"])
+def accept_project(project_id):
+
+    if "pm_id" not in session:
+        return redirect(url_for("pm_login"))
+
+    project = Project.query.get_or_404(project_id)
+
+    # Only allow if this PM is assigned
+    if project.project_manager_id == session["pm_id"]:
+        project.assignment_status = "Accepted"
+        db.session.commit()
+
+    return redirect(url_for("project_manager_dashboard"))
 
 
 
@@ -296,6 +359,36 @@ def pm_create_other_pm():
 
     return redirect(url_for("project_manager_dashboard"))
 
+# ----------------------
+# Admin: Create Project
+# ----------------------
+
+@app.route("/admin/create-project", methods=["POST"])
+def create_project():
+
+    name = request.form.get("name")
+    budget = request.form.get("budget")
+    duration = request.form.get("duration")
+    status = request.form.get("status")
+    pm_id = request.form.get("pm_id")
+
+    if not name or not budget or not duration:
+        flash("All fields are required", "error")
+        return redirect(url_for("admin_dashboard"))
+
+    project = Project(
+        name=name,
+        budget=float(budget),
+        duration_days=int(duration),
+        status=status,
+        project_manager_id=pm_id if pm_id else None
+    )
+
+    db.session.add(project)
+    db.session.commit()
+
+    flash("Project created successfully", "success")
+    return redirect(url_for("admin_dashboard"))
 
 
 # ----------------------
